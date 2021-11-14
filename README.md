@@ -5,6 +5,6 @@
 
 1.通过微信官方API接口将指定应用(短信、来电、其它APP)的消息通知转发到个人微信，配置文件路径：/data/adb/modules/Message_Forwarding/config.conf，日志文件log.log。
 
-2.支持全局开关、蓝牙控制开关。
+2.支持蓝牙控制开关。
 
 3.支持黑名单关键词过滤、白名单关键词过滤。
