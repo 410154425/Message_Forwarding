@@ -1,0 +1,8 @@
+id=Message_Forwarding
+name=消转模块
+version=20211114
+versionCode=2021111400
+author=top大佬(酷安)
+description=通过微信官方API接口将指定应用(短信、来电、其它APP)的消息通知转发到个人微信，配置文件路径：/data/adb/modules/Message_Forwarding/config.conf，日志文件log.log。 
+# ##
+
