@@ -83,6 +83,8 @@ if type curl > /dev/null 2>&1; then
 			echo "$(date +%F_%T) 【钉钉通道 消息转发失败】：运营商网络问题，访问接口失败，请变更外网IP后再尝试。或是请检查配置参数[dd_Webhook]是否填写正确，返回提示：$dd_push。【消息】：$wx_text" >> "$MODDIR/log.log"
 		fi
 	}
+	wx_switch="$(echo "$config_conf" | egrep '^wx_switch=' | sed -n 's/wx_switch=//g;$p')"
+	dd_switch="$(echo "$config_conf" | egrep '^dd_switch=' | sed -n 's/dd_switch=//g;$p')"
 	battery_level="$(dumpsys battery | egrep 'level:' | sed -n 's/.*level: //g;$p')"
 	Low_battery="$(echo "$config_conf" | egrep '^Low_battery=' | sed -n 's/Low_battery=//g;$p')"
 	if [ "$battery_level" != "" -a "$battery_level" -le "$Low_battery" ]; then
@@ -123,8 +125,6 @@ if type curl > /dev/null 2>&1; then
 		fi
 		exit 0
 	fi
-	wx_switch="$(echo "$config_conf" | egrep '^wx_switch=' | sed -n 's/wx_switch=//g;$p')"
-	dd_switch="$(echo "$config_conf" | egrep '^dd_switch=' | sed -n 's/dd_switch=//g;$p')"
 	black_list="$(echo -E "$config_conf" | egrep '^black_list=' | sed -n 's/black_list=//g;$p')"
 	white_list="$(echo -E "$config_conf" | egrep '^white_list=' | sed -n 's/white_list=//g;$p')"
 	Message_n="$(echo "$Message_list" | wc -l)"
