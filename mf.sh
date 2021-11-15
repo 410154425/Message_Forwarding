@@ -88,7 +88,12 @@ if type curl > /dev/null 2>&1; then
 	if [ "$battery_level" != "" -a "$battery_level" -le "$Low_battery" ]; then
 		if [ ! -f "$MODDIR/Low_battery" ]; then
 			wx_text="低电量提醒：电量$battery_level"
-			Forwarding
+			if [ "$wx_switch" != "0" ]; then
+				Forwarding
+			fi
+			if [ "$dd_switch" = "1" ]; then
+				dingtalk_push
+			fi
 			touch "$MODDIR/Low_battery" > /dev/null 2>&1
 		fi
 	fi
