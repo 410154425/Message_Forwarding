@@ -20,11 +20,11 @@ if type curl > /dev/null 2>&1; then
 		sed -i '1,10d' "$MODDIR/log.log" > /dev/null 2>&1
 	fi
 	Forwarding() {
-	wx_agentid="$(echo "$config_conf" | egrep '^wx_agentid=' | sed -n 's/wx_agentid=//g;$p')"
-	wx_token="$(cat "$MODDIR/wx_$wx_agentid")"
-	wx_url="https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=$wx_token"
-	wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\n\n【消转模块】提供转发 <a href='https://payapp.weixin.qq.com/qrpay/order/home2?key=idc_CHNDVI_dHFNbTNZIWMCcbgDVmskHA--'>投币</a>\"}}"
-	wx_push="$(curl -s --connect-timeout 12 -m 15 -d "$wx_post" "$wx_url")"
+		wx_agentid="$(echo "$config_conf" | egrep '^wx_agentid=' | sed -n 's/wx_agentid=//g;$p')"
+		wx_token="$(cat "$MODDIR/wx_$wx_agentid")"
+		wx_url="https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=$wx_token"
+		wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\n\n【消转模块】提供转发 <a href='https://payapp.weixin.qq.com/qrpay/order/home2?key=idc_CHNDVI_dHFNbTNZIWMCcbgDVmskHA--'>投币</a>\"}}"
+		wx_push="$(curl -s --connect-timeout 12 -m 15 -d "$wx_post" "$wx_url")"
 		if [ "$wx_push" != "" ]; then
 			wx_push_errcode="$(echo "$wx_push" | egrep '\"errcode\"' | sed -n 's/ //g;s/.*\"errcode\"://g;s/\".*//g;s/,.*//g;$p')"
 			if [ "$wx_agentid" != "" ]; then
@@ -43,27 +43,44 @@ if type curl > /dev/null 2>&1; then
 								wx_push_errcode="$(echo "$wx_push" | egrep '\"errcode\"' | sed -n 's/ //g;s/.*\"errcode\"://g;s/\".*//g;s/,.*//g;$p')"
 							fi
 						else
-							echo "$(date +%T) 消息转发失败：请检查配置参数[企业ID]、[应用Secret]是否填写正确且相互匹配，返回提示：$wx_access_token" >> "$MODDIR/log.log"
+							echo "$(date +%F_%T) 【微信通道 消息转发失败】：请检查配置参数[企业ID]、[应用Secret]是否填写正确且相互匹配，返回提示：$wx_access_token" >> "$MODDIR/log.log"
 						fi
 					else
-						echo "$(date +%T) 【消息转发失败】：运营商网络问题或IP遭腾讯拦截，请变更外网IP后再尝试。【消息】：$wx_text" >> "$MODDIR/log.log"
+						echo "$(date +%F_%T) 【微信通道 消息转发失败】：运营商网络问题或IP遭腾讯拦截，请变更外网IP后再尝试。【消息】：$wx_text" >> "$MODDIR/log.log"
 					fi
 				fi
 			else
-				echo "$(date +%T) 消息转发失败：[应用AgentId]参数未填写" >> "$MODDIR/log.log"
+				echo "$(date +%F_%T) 【微信通道 消息转发失败】：[应用AgentId]参数未填写" >> "$MODDIR/log.log"
 			fi
 		fi
 		if [ "$wx_push" != "" ]; then
 			if [ "$wx_push_errcode" = "0" ]; then
 				echo "$wx_token" > "$MODDIR/wx_$wx_agentid"
-				echo "$(date +%T) 消息转发成功：$wx_text" >> "$MODDIR/log.log"
+				echo "$(date +%F_%T) 微信通道 消息转发成功：$wx_text" >> "$MODDIR/log.log"
 			elif [ "$wx_push_errcode" = "44004" ]; then
-				echo "$(date +%T) 消息转发失败：content错误" >> "$MODDIR/log.log"
+				echo "$(date +%F_%T) 【微信通道 消息转发失败】：content错误" >> "$MODDIR/log.log"
 			elif [ "$wx_push_errcode" != "42001" -a "$wx_push_errcode" != "41001" -a "$wx_push_errcode" != "40014" ]; then
-				echo "$(date +%T) 消息转发失败：请检查配置参数[企业ID]、[应用Secret]、[应用AgentId]是否填写正确且相互匹配，返回提示：$wx_push" >> "$MODDIR/log.log"
+				echo "$(date +%F_%T) 【微信通道 消息转发失败】：请检查配置参数[企业ID]、[应用Secret]、[应用AgentId]是否填写正确且相互匹配，返回提示：$wx_push" >> "$MODDIR/log.log"
 			fi
 		else
-			echo "$(date +%T) 【消息转发失败】：运营商网络问题，访问接口失败，请变更外网IP后再尝试。【消息】：$wx_text" >> "$MODDIR/log.log"
+			echo "$(date +%F_%T) 【微信通道 消息转发失败】：运营商网络问题，访问接口失败，请变更外网IP后再尝试。【消息】：$wx_text" >> "$MODDIR/log.log"
+		fi
+	}
+	dingtalk_push() {
+		dd_url="$(echo "$config_conf" | egrep '^dd_Webhook=' | sed -n 's/dd_Webhook=//g;$p')"
+		dd_post="{\"msgtype\": \"markdown\",\"markdown\": {\"title\":\"$wx_text\",\"text\": \"$wx_text\n\n【消转模块】提供转发 [投币](https://qr.alipay.com/fkx12785tplw19c5mtquh1e)\"}}"
+		dd_push="$(curl -s --connect-timeout 12 -m 15 -H 'Content-Type: application/json' -d "$dd_post" "$dd_url")"
+		if [ "$dd_push" != "" ]; then
+			dd_push_errcode="$(echo "$dd_push" | egrep '\"errcode\"' | sed -n 's/ //g;s/.*\"errcode\"://g;s/\".*//g;s/,.*//g;$p')"
+			if [ "$dd_push_errcode" = "0" ]; then
+				echo "$(date +%F_%T) 钉钉通道 消息转发成功：$wx_text" >> "$MODDIR/log.log"
+			elif [ "$wx_push_errcode" = "40035" ]; then
+				echo "$(date +%F_%T) 【钉钉通道 消息转发失败】：消息内容导致json格式错误，返回提示：$dd_push，请联系作者修复。【消息】：$wx_text" >> "$MODDIR/log.log"
+			else
+				echo "$(date +%F_%T) 【钉钉通道 消息转发失败】：请检查配置参数[dd_Webhook]是否填写正确，返回提示：$dd_push。【消息】：$wx_text" >> "$MODDIR/log.log"
+			fi
+		else
+			echo "$(date +%F_%T) 【钉钉通道 消息转发失败】：运营商网络问题，访问接口失败，请变更外网IP后再尝试。或是请检查配置参数[dd_Webhook]是否填写正确，返回提示：$dd_push。【消息】：$wx_text" >> "$MODDIR/log.log"
 		fi
 	}
 	battery_level="$(dumpsys battery | egrep 'level:' | sed -n 's/.*level: //g;$p')"
@@ -84,11 +101,11 @@ if type curl > /dev/null 2>&1; then
 	if [ "$app_list" = "" ]; then
 		exit 0
 	fi
-	MF_notification="$(dumpsys notification --noredact | sed -n 's/\\\\n//g;s/\\n//g;p')"
+	MF_notification="$(dumpsys notification --noredact | sed -n 's/\\//g;p')"
 	if [ "$MF_notification" = "" ]; then
-		MF_notification="$(dumpsys notification | sed -n 's/\\\\n//g;s/\\n//g;p')"
+		MF_notification="$(dumpsys notification | sed -n 's/\\//g;p')"
 		if [ "$MF_notification" = "" ]; then
-			echo "$(date +%T) 无法获取消息通知列表" > "$MODDIR/log.log"
+			echo "$(date +%F_%T) 无法获取消息通知列表" > "$MODDIR/log.log"
 			exit 0
 		fi
 	fi
@@ -101,6 +118,8 @@ if type curl > /dev/null 2>&1; then
 		fi
 		exit 0
 	fi
+	wx_switch="$(echo "$config_conf" | egrep '^wx_switch=' | sed -n 's/wx_switch=//g;$p')"
+	dd_switch="$(echo "$config_conf" | egrep '^dd_switch=' | sed -n 's/dd_switch=//g;$p')"
 	black_list="$(echo -E "$config_conf" | egrep '^black_list=' | sed -n 's/black_list=//g;$p')"
 	white_list="$(echo -E "$config_conf" | egrep '^white_list=' | sed -n 's/white_list=//g;$p')"
 	Message_n="$(echo "$Message_list" | wc -l)"
@@ -115,7 +134,7 @@ if type curl > /dev/null 2>&1; then
 				MF_app="$Message_app"
 			fi
 			ticker_Text="$(echo "$Message_p" | egrep 'tickerText=' | sed -n 's/.*tickerText=//g;s/ contentView=.*//g;s/\"/\\\"/g;$p')"
-			android_title="$(echo "$Message_p" | egrep 'android\.title=' | sed -n 's/.*android\.title=//g;s/) android\..*//g;s/.*String (//g;s/\"/\\\"/g;$p')"
+			android_title="$(echo "$Message_p" | egrep 'android\.title=' | sed -n 's/.*android\.title=//g;s/) android\..*//g;s/) isVideoCall=.*//g;s/.*String (//g;s/\"/\\\"/g;$p')"
 			if ! [[ "$ticker_Text" == "" ]] && ! [[ "$ticker_Text" == "null" ]] && ! [[ "$android_title" =~ "$ticker_Text" ]]; then
 				if [ "$black_list" != "" ]; then
 					ticker_Text="$(echo "$ticker_Text" | egrep -v "$black_list")"
@@ -125,7 +144,12 @@ if type curl > /dev/null 2>&1; then
 				fi
 				if [ "$ticker_Text" != "" ]; then
 					wx_text="$ticker_Text\n【$MF_app】"
-					Forwarding
+					if [ "$wx_switch" != "0" ]; then
+						Forwarding
+					fi
+					if [ "$dd_switch" = "1" ]; then
+						dingtalk_push
+					fi
 				fi
 			else
 				android_text="$(echo "$Message_p" | egrep 'android\.text=' | sed -n 's/.*android\.text=//g;s/) android\..*//g;s/.*String (//g;s/\"/\\\"/g;$p')"
@@ -137,10 +161,15 @@ if type curl > /dev/null 2>&1; then
 					if [ "$white_list" != "" ]; then
 						ticker_Text="$(echo "$ticker_Text" | egrep "$white_list")"
 					fi
-					ticker_Text="$(echo "$ticker_Text" | egrep -v '可能导致系统卡顿，降低待机时间，点按关闭')"
+					ticker_Text="$(echo "$ticker_Text" | egrep -v '”正在运行: ')"
 					if [ "$ticker_Text" != "" ]; then
 						wx_text="$ticker_Text\n【$MF_app】"
-						Forwarding
+						if [ "$wx_switch" != "0" ]; then
+							Forwarding
+						fi
+						if [ "$dd_switch" = "1" ]; then
+							dingtalk_push
+						fi
 					fi
 				fi
 			fi
@@ -153,8 +182,8 @@ if type curl > /dev/null 2>&1; then
 		echo "$pushed_list" > "$MODDIR/pushed"
 	fi
 else
-	echo "$(date +%T) 系统缺少curl命令模块：无法转发消息，请安装curl模块后再使用" > "$MODDIR/log.log"
+	echo "$(date +%F_%T) 系统缺少curl命令模块：无法转发消息，请安装curl模块后再使用" > "$MODDIR/log.log"
 fi
-#version=2021111400
+#version=2021111500
 # ##
 
