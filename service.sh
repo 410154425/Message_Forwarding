@@ -12,7 +12,7 @@ sleep 3
 up=1
 while :;
 do
-if [ "$up" = "20" -o "$up" = "7200" ]; then
+if [ "$up" = "60" -o "$up" = "21600" ]; then
 	"$MODDIR/up" > /dev/null 2>&1 &
 	up=21
 fi
