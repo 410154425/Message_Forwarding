@@ -25,21 +25,21 @@ if type curl > /dev/null 2>&1; then
 		wx_url="https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=$wx_token"
 		wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\n\n【消转模块】提供转发 <a href='https://payapp.weixin.qq.com/qrpay/order/home2?key=idc_CHNDVI_dHFNbTNZIWMCcbgDVmskHA--'>投币</a>\"}}"
 		wx_push="$(curl -s --connect-timeout 12 -m 15 -d "$wx_post" "$wx_url")"
-		if [ "$wx_push" != "" ]; then
+		if [ -n "$wx_push" ]; then
 			wx_push_errcode="$(echo "$wx_push" | egrep '\"errcode\"' | sed -n 's/ //g;s/.*\"errcode\"://g;s/\".*//g;s/,.*//g;$p')"
-			if [ "$wx_agentid" != "" ]; then
+			if [ -n "$wx_agentid" ]; then
 				if [ "$wx_push_errcode" = "42001" -o "$wx_push_errcode" = "41001" -o "$wx_push_errcode" = "40014" ]; then
 					wx_corpid="$(echo "$config_conf" | egrep '^wx_corpid=' | sed -n 's/wx_corpid=//g;$p')"
 					wx_secret="$(echo "$config_conf" | egrep '^wx_secret=' | sed -n 's/wx_secret=//g;$p')"
 					wx_access_token="$(curl -s --connect-timeout 12 -m 15 "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$wx_corpid&corpsecret=$wx_secret")"
-					if [ "$wx_access_token" != "" ]; then
+					if [ -n "$wx_access_token" ]; then
 						wx_token_errcode="$(echo "$wx_access_token" | egrep '\"errcode\"' | sed -n 's/ //g;s/.*\"errcode\"://g;s/\".*//g;s/,.*//g;$p')"
 						if [ "$wx_token_errcode" = "0" ]; then
 							wx_token="$(echo "$wx_access_token" | egrep '\"access_token\"' | sed -n 's/ //g;s/.*\"access_token\":\"//g;s/\".*//g;$p')"
 							wx_url="https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=$wx_token"
 							wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\n\n【消转模块】提供转发 <a href='https://payapp.weixin.qq.com/qrpay/order/home2?key=idc_CHNDVI_dHFNbTNZIWMCcbgDVmskHA--'>投币</a>\"}}"
 							wx_push="$(curl -s --connect-timeout 12 -m 15 -d "$wx_post" "$wx_url")"
-							if [ "$wx_push" != "" ]; then
+							if [ -n "$wx_push" ]; then
 								wx_push_errcode="$(echo "$wx_push" | egrep '\"errcode\"' | sed -n 's/ //g;s/.*\"errcode\"://g;s/\".*//g;s/,.*//g;$p')"
 							fi
 						else
@@ -53,7 +53,7 @@ if type curl > /dev/null 2>&1; then
 				echo "$(date +%F_%T) 【微信通道 消息转发失败】：[应用AgentId]参数未填写" >> "$MODDIR/log.log"
 			fi
 		fi
-		if [ "$wx_push" != "" ]; then
+		if [ -n "$wx_push" ]; then
 			if [ "$wx_push_errcode" = "0" ]; then
 				echo "$wx_token" > "$MODDIR/wx_$wx_agentid"
 				echo "$(date +%F_%T) 微信通道 消息转发成功：$wx_text" >> "$MODDIR/log.log"
@@ -70,7 +70,7 @@ if type curl > /dev/null 2>&1; then
 		dd_url="$(echo "$config_conf" | egrep '^dd_Webhook=' | sed -n 's/dd_Webhook=//g;$p')"
 		dd_post="{\"msgtype\": \"markdown\",\"markdown\": {\"title\":\"$wx_text\",\"text\": \"$wx_text\n\n【消转模块】提供转发 [投币](https://qr.alipay.com/fkx12785tplw19c5mtquh1e)\"}}"
 		dd_push="$(curl -s --connect-timeout 12 -m 15 -H 'Content-Type: application/json' -d "$dd_post" "$dd_url")"
-		if [ "$dd_push" != "" ]; then
+		if [ -n "$dd_push" ]; then
 			dd_push_errcode="$(echo "$dd_push" | egrep '\"errcode\"' | sed -n 's/ //g;s/.*\"errcode\"://g;s/\".*//g;s/,.*//g;$p')"
 			if [ "$dd_push_errcode" = "0" ]; then
 				echo "$(date +%F_%T) 钉钉通道 消息转发成功：$wx_text" >> "$MODDIR/log.log"
@@ -87,7 +87,7 @@ if type curl > /dev/null 2>&1; then
 	dd_switch="$(echo "$config_conf" | egrep '^dd_switch=' | sed -n 's/dd_switch=//g;$p')"
 	battery_level="$(dumpsys battery | egrep 'level:' | sed -n 's/.*level: //g;$p')"
 	Low_battery="$(echo "$config_conf" | egrep '^Low_battery=' | sed -n 's/Low_battery=//g;$p')"
-	if [ "$battery_level" != "" -a "$battery_level" -le "$Low_battery" ]; then
+	if [ -n "$battery_level" -a "$battery_level" -le "$Low_battery" ]; then
 		if [ ! -f "$MODDIR/Low_battery" ]; then
 			wx_text="低电量提醒：电量$battery_level"
 			if [ "$wx_switch" != "0" ]; then
@@ -105,13 +105,13 @@ if type curl > /dev/null 2>&1; then
 		fi
 	fi
 	app_list="$(echo "$config_conf" | egrep '^app=' | sed -n 's/app=//g;s/ //g;$p')"
-	if [ "$app_list" = "" ]; then
+	if [ ! -n "$app_list" ]; then
 		exit 0
 	fi
 	MF_notification="$(dumpsys notification --noredact | sed -n 's/\\//g;p')"
-	if [ "$MF_notification" = "" ]; then
+	if [ ! -n "$MF_notification" ]; then
 		MF_notification="$(dumpsys notification | sed -n 's/\\//g;p')"
-		if [ "$MF_notification" = "" ]; then
+		if [ ! -n "$MF_notification" ]; then
 			echo "$(date +%F_%T) 无法获取消息通知列表" > "$MODDIR/log.log"
 			exit 0
 		fi
@@ -119,7 +119,7 @@ if type curl > /dev/null 2>&1; then
 	MF_NotificationRecord="$(echo -e $MF_notification | sed -n 's/NotificationRecord(/\\nNotificationRecord(/g;p')"
 	MF_Message="$(echo -e "$MF_NotificationRecord" | sed -n 's/mAdjustments=\[.*//g;s/stats=SingleNotificationStats{.*//g;p')"
 	Message_list="$(echo "$MF_Message" | egrep 'NotificationRecord\(' | egrep "$app_list")"
-	if [ "$Message_list" = "" ]; then
+	if [ ! -n "$Message_list" ]; then
 		if [ -f "$MODDIR/pushed" ]; then
 			rm -f "$MODDIR/pushed" > /dev/null 2>&1
 		fi
@@ -135,19 +135,19 @@ if type curl > /dev/null 2>&1; then
 		MF_app="$(echo "$Message_id" | sed -n 's/.* pkg=//g;s/ .*//g;$p')"
 		if [[ "$app_list" =~ "$MF_app" ]] && ! [[ "$MF_pushed" =~ "$Message_id" ]]; then
 			Message_app="$(echo "$config_conf" | egrep "^$MF_app=" | sed -n 's/.*=//g;$p')"
-			if [ "$Message_app" != "" ]; then
+			if [ -n "$Message_app" ]; then
 				MF_app="$Message_app"
 			fi
 			ticker_Text="$(echo "$Message_p" | egrep 'tickerText=' | sed -n 's/.*tickerText=//g;s/ contentView=.*//g;s/\"/\\\"/g;$p')"
 			android_title="$(echo "$Message_p" | egrep 'android\.title=' | sed -n 's/.*android\.title=//g;s/) android\..*//g;s/) isVideoCall=.*//g;s/.*String (//g;s/\"/\\\"/g;$p')"
 			if ! [[ "$ticker_Text" == "" ]] && ! [[ "$ticker_Text" == "null" ]] && ! [[ "$android_title" =~ "$ticker_Text" ]]; then
-				if [ "$black_list" != "" ]; then
+				if [ -n "$black_list" ]; then
 					ticker_Text="$(echo "$ticker_Text" | egrep -v "$black_list")"
 				fi
-				if [ "$white_list" != "" ]; then
+				if [ -n "$white_list" ]; then
 					ticker_Text="$(echo "$ticker_Text" | egrep "$white_list")"
 				fi
-				if [ "$ticker_Text" != "" ]; then
+				if [ -n "$ticker_Text" ]; then
 					wx_text="$ticker_Text\n【$MF_app】"
 					if [ "$wx_switch" != "0" ]; then
 						Forwarding
@@ -159,15 +159,15 @@ if type curl > /dev/null 2>&1; then
 			else
 				android_text="$(echo "$Message_p" | egrep 'android\.text=' | sed -n 's/.*android\.text=//g;s/) android\..*//g;s/.*String (//g;s/\"/\\\"/g;$p')"
 				ticker_Text="$android_title: $android_text"
-				if [ "$android_title" != "" -o "$android_text" != "" ]; then
-					if [ "$black_list" != "" ]; then
+				if [ -n "$android_title" -o -n "$android_text" ]; then
+					if [ -n "$black_list" ]; then
 						ticker_Text="$(echo "$ticker_Text" | egrep -v "$black_list")"
 					fi
-					if [ "$white_list" != "" ]; then
+					if [ -n "$white_list" ]; then
 						ticker_Text="$(echo "$ticker_Text" | egrep "$white_list")"
 					fi
 					ticker_Text="$(echo "$ticker_Text" | egrep -v '”正在运行: ')"
-					if [ "$ticker_Text" != "" ]; then
+					if [ -n "$ticker_Text" ]; then
 						wx_text="$ticker_Text\n【$MF_app】"
 						if [ "$wx_switch" != "0" ]; then
 							Forwarding
@@ -189,6 +189,6 @@ if type curl > /dev/null 2>&1; then
 else
 	echo "$(date +%F_%T) 系统缺少curl命令模块：无法转发消息，请安装curl模块后再使用" > "$MODDIR/log.log"
 fi
-#version=2021111500
+#version=2021122700
 # ##
 

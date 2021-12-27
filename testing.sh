@@ -5,9 +5,9 @@
 MODDIR=${0%/*}
 if type curl > /dev/null 2>&1; then
 	MF_notification="$(dumpsys notification --noredact | sed -n 's/\\//g;p')"
-	if [ "$MF_notification" = "" ]; then
+	if [ ! -n "$MF_notification" ]; then
 		MF_notification="$(dumpsys notification | sed -n 's/\\//g;p')"
-		if [ "$MF_notification" = "" ]; then
+		if [ ! -n "$MF_notification" ]; then
 			echo "无法获取消息通知列表"
 			exit 0
 		fi

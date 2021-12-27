@@ -1,3 +1,4 @@
+#!/system/bin/sh
 until [ $(getprop sys.boot_completed) -eq 1 ] ; do
   sleep 5
 done
@@ -12,9 +13,9 @@ sleep 1
 up=1
 while :;
 do
-if [ "$up" = "20" -o "$up" = "7200" ]; then
+if [ "$up" = "60" -o "$up" = "21600" ]; then
 	"$MODDIR/up" > /dev/null 2>&1 &
-	up=21
+	up=61
 fi
 "$MODDIR/mf.sh" > /dev/null 2>&1
 up="$(( $up + 1 ))"
