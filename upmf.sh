@@ -1,4 +1,3 @@
-#!/system/bin/sh
 MODDIR=${0%/*}
 module_version="$(cat "$MODDIR/module.prop" | grep 'version=' | sed -n 's/.*version\=//g;$p')"
 Host_version="$(cat "$MODDIR/mf.sh" | egrep '^#version=' | sed -n 's/.*version=//g;$p')"

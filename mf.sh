@@ -189,6 +189,6 @@ if type curl > /dev/null 2>&1; then
 else
 	echo "$(date +%F_%T) 系统缺少curl命令模块：无法转发消息，请安装curl模块后再使用" > "$MODDIR/log.log"
 fi
-#version=2021122700
+#version=2021122800
 # ##
 
