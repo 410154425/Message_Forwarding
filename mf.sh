@@ -85,9 +85,9 @@ if type curl > /dev/null 2>&1; then
 			dd_push_errcode="$(echo "$dd_push" | egrep '\"errcode\"' | sed -n 's/ //g;s/.*\"errcode\"://g;s/\".*//g;s/,.*//g;$p')"
 			if [ "$dd_push_errcode" = "0" ]; then
 				echo "$(date +%F_%T) 钉钉通道 消息转发成功：$wx_text" >> "$MODDIR/log.log"
-			elif [ "$wx_push_errcode" = "40035" ]; then
+			elif [ "$dd_push_errcode" = "40035" ]; then
 				echo "$(date +%F_%T) 【钉钉通道 消息转发失败】：消息内容导致json格式错误，返回提示：$dd_push，请联系作者修复。【消息】：$wx_text" >> "$MODDIR/log.log"
-			elif [ "$wx_push_errcode" = "310000" ]; then
+			elif [ "$dd_push_errcode" = "310000" ]; then
 				echo "$(date +%F_%T) 【钉钉通道 消息转发失败】：请检查钉钉群机器人-安全设置是否已经且仅设置自定义关键词：消转模块，返回提示：$dd_push。【消息】：$wx_text" >> "$MODDIR/log.log"
 			else
 				echo "$(date +%F_%T) 【钉钉通道 消息转发失败】：请检查配置参数[dd_Webhook]是否填写正确，返回提示：$dd_push。【消息】：$wx_text" >> "$MODDIR/log.log"
