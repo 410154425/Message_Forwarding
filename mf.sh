@@ -23,7 +23,13 @@ if type curl > /dev/null 2>&1; then
 		wx_agentid="$(echo "$config_conf" | egrep '^wx_agentid=' | sed -n 's/wx_agentid=//g;$p')"
 		wx_token="$(cat "$MODDIR/wx_$wx_agentid")"
 		wx_url="https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=$wx_token"
-		wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\n\n【消转模块】提供转发 <a href='https://payapp.weixin.qq.com/qrpay/order/home2?key=idc_CHNDVI_dHFNbTNZIWMCcbgDVmskHA--'>投币</a>\"}}"
+		time_wx="$(cat "$MODDIR/time_wx")"
+		if [ "$time_wx" = "$(date +%m)" ]; then
+			wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\"}}"
+		else
+			echo "$(date +%m)" > "$MODDIR/time_wx"
+			wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\n\n【消转模块】提供转发 <a href='https://payapp.weixin.qq.com/qrpay/order/home2?key=idc_CHNDVI_dHFNbTNZIWMCcbgDVmskHA--'>投币</a>\"}}"
+		fi
 		wx_push="$(curl -s --connect-timeout 12 -m 15 -d "$wx_post" "$wx_url")"
 		if [ -n "$wx_push" ]; then
 			wx_push_errcode="$(echo "$wx_push" | egrep '\"errcode\"' | sed -n 's/ //g;s/.*\"errcode\"://g;s/\".*//g;s/,.*//g;$p')"
@@ -37,7 +43,12 @@ if type curl > /dev/null 2>&1; then
 						if [ "$wx_token_errcode" = "0" ]; then
 							wx_token="$(echo "$wx_access_token" | egrep '\"access_token\"' | sed -n 's/ //g;s/.*\"access_token\":\"//g;s/\".*//g;$p')"
 							wx_url="https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=$wx_token"
-							wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\n\n【消转模块】提供转发 <a href='https://payapp.weixin.qq.com/qrpay/order/home2?key=idc_CHNDVI_dHFNbTNZIWMCcbgDVmskHA--'>投币</a>\"}}"
+							if [ "$time_wx" = "$(date +%m)" ]; then
+								wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\"}}"
+							else
+								echo "$(date +%m)" > "$MODDIR/time_wx"
+								wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\n\n【消转模块】提供转发 <a href='https://payapp.weixin.qq.com/qrpay/order/home2?key=idc_CHNDVI_dHFNbTNZIWMCcbgDVmskHA--'>投币</a>\"}}"
+							fi
 							wx_push="$(curl -s --connect-timeout 12 -m 15 -d "$wx_post" "$wx_url")"
 							if [ -n "$wx_push" ]; then
 								wx_push_errcode="$(echo "$wx_push" | egrep '\"errcode\"' | sed -n 's/ //g;s/.*\"errcode\"://g;s/\".*//g;s/,.*//g;$p')"
@@ -76,6 +87,8 @@ if type curl > /dev/null 2>&1; then
 				echo "$(date +%F_%T) 钉钉通道 消息转发成功：$wx_text" >> "$MODDIR/log.log"
 			elif [ "$wx_push_errcode" = "40035" ]; then
 				echo "$(date +%F_%T) 【钉钉通道 消息转发失败】：消息内容导致json格式错误，返回提示：$dd_push，请联系作者修复。【消息】：$wx_text" >> "$MODDIR/log.log"
+			elif [ "$wx_push_errcode" = "310000" ]; then
+				echo "$(date +%F_%T) 【钉钉通道 消息转发失败】：请检查钉钉群机器人-安全设置是否已经且仅设置自定义关键词：消转模块，返回提示：$dd_push。【消息】：$wx_text" >> "$MODDIR/log.log"
 			else
 				echo "$(date +%F_%T) 【钉钉通道 消息转发失败】：请检查配置参数[dd_Webhook]是否填写正确，返回提示：$dd_push。【消息】：$wx_text" >> "$MODDIR/log.log"
 			fi
@@ -112,7 +125,7 @@ if type curl > /dev/null 2>&1; then
 	if [ ! -n "$MF_notification" ]; then
 		MF_notification="$(dumpsys notification | sed -n 's/\\//g;p')"
 		if [ ! -n "$MF_notification" ]; then
-			echo "$(date +%F_%T) 无法获取消息通知列表" > "$MODDIR/log.log"
+			echo "$(date +%F_%T) 无法获取消息通知列表" >> "$MODDIR/log.log"
 			exit 0
 		fi
 	fi
@@ -129,6 +142,7 @@ if type curl > /dev/null 2>&1; then
 	white_list="$(echo -E "$config_conf" | egrep '^white_list=' | sed -n 's/white_list=//g;$p')"
 	Message_n="$(echo "$Message_list" | wc -l)"
 	MF_pushed="$(cat "$MODDIR/pushed")"
+	display_format="$(echo "$config_conf" | egrep '^display_format=' | sed -n 's/display_format=//g;$p')"
 	until [ "$Message_n" = "0" ] ; do
 		Message_p="$(echo "$Message_list" | sed -n "${Message_n}p")"
 		Message_id="$(echo "$Message_p" | cut -d ' ' -f '1-2' | sed -n 's/NotificationRecord(//g;$p')"
@@ -148,7 +162,11 @@ if type curl > /dev/null 2>&1; then
 					ticker_Text="$(echo "$ticker_Text" | egrep "$white_list")"
 				fi
 				if [ -n "$ticker_Text" ]; then
-					wx_text="$ticker_Text\n【$MF_app】"
+					if [ "$display_format" = "2" ]; then
+						wx_text="【$MF_app】\n$ticker_Text"
+					else
+						wx_text="$ticker_Text\n【$MF_app】"
+					fi
 					if [ "$wx_switch" != "0" ]; then
 						Forwarding
 					fi
@@ -168,7 +186,11 @@ if type curl > /dev/null 2>&1; then
 					fi
 					ticker_Text="$(echo "$ticker_Text" | egrep -v '”正在运行: ')"
 					if [ -n "$ticker_Text" ]; then
-						wx_text="$ticker_Text\n【$MF_app】"
+						if [ "$display_format" = "2" ]; then
+							wx_text="【$MF_app】\n$ticker_Text"
+						else
+							wx_text="$ticker_Text\n【$MF_app】"
+						fi
 						if [ "$wx_switch" != "0" ]; then
 							Forwarding
 						fi
@@ -189,6 +211,6 @@ if type curl > /dev/null 2>&1; then
 else
 	echo "$(date +%F_%T) 系统缺少curl命令模块：无法转发消息，请安装curl模块后再使用" > "$MODDIR/log.log"
 fi
-#version=2021122800
+#version=2022041000
 # ##
 
