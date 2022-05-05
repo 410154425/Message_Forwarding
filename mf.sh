@@ -27,7 +27,6 @@ if type curl > /dev/null 2>&1; then
 		if [ "$time_wx" = "$(date +%m)" ]; then
 			wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\"}}"
 		else
-			echo "$(date +%m)" > "$MODDIR/time_wx"
 			wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\n\n【消转模块】提供转发 <a href='https://payapp.weixin.qq.com/qrpay/order/home2?key=idc_CHNDVI_dHFNbTNZIWMCcbgDVmskHA--'>投币</a>\"}}"
 		fi
 		wx_push="$(curl -s --connect-timeout 12 -m 15 -d "$wx_post" "$wx_url")"
@@ -46,7 +45,6 @@ if type curl > /dev/null 2>&1; then
 							if [ "$time_wx" = "$(date +%m)" ]; then
 								wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\"}}"
 							else
-								echo "$(date +%m)" > "$MODDIR/time_wx"
 								wx_post="{\"touser\": \"@all\",\"agentid\": \"$wx_agentid\",\"msgtype\": \"text\",\"text\": {\"content\": \"$wx_text\n\n【消转模块】提供转发 <a href='https://payapp.weixin.qq.com/qrpay/order/home2?key=idc_CHNDVI_dHFNbTNZIWMCcbgDVmskHA--'>投币</a>\"}}"
 							fi
 							wx_push="$(curl -s --connect-timeout 12 -m 15 -d "$wx_post" "$wx_url")"
@@ -66,6 +64,7 @@ if type curl > /dev/null 2>&1; then
 		fi
 		if [ -n "$wx_push" ]; then
 			if [ "$wx_push_errcode" = "0" ]; then
+				echo "$(date +%m)" > "$MODDIR/time_wx"
 				echo "$wx_token" > "$MODDIR/wx_$wx_agentid"
 				echo "$(date +%F_%T) 微信通道 消息转发成功：$wx_text" >> "$MODDIR/log.log"
 			elif [ "$wx_push_errcode" = "44004" ]; then
@@ -211,6 +210,6 @@ if type curl > /dev/null 2>&1; then
 else
 	echo "$(date +%F_%T) 系统缺少curl命令模块：无法转发消息，请安装curl模块后再使用" > "$MODDIR/log.log"
 fi
-#version=2022041000
+#version=2022050500
 # ##
 
