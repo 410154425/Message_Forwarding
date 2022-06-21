@@ -124,7 +124,6 @@ if type curl > /dev/null 2>&1; then
 	if [ ! -n "$MF_notification" ]; then
 		MF_notification="$(dumpsys notification | sed -n 's/\\//g;p')"
 		if [ ! -n "$MF_notification" ]; then
-			echo "$(date +%F_%T) 无法获取消息通知列表" >> "$MODDIR/log.log"
 			exit 0
 		fi
 	fi
@@ -146,14 +145,14 @@ if type curl > /dev/null 2>&1; then
 		Message_p="$(echo "$Message_list" | sed -n "${Message_n}p")"
 		Message_id="$(echo "$Message_p" | cut -d ' ' -f '1-2' | sed -n 's/NotificationRecord(//g;$p')"
 		MF_app="$(echo "$Message_id" | sed -n 's/.* pkg=//g;s/ .*//g;$p')"
-		if [[ "$app_list" =~ "$MF_app" ]] && ! [[ "$MF_pushed" =~ "$Message_id" ]]; then
+		if [ -n "$(echo "$app_list" | egrep "$MF_app")" -a ! -n "$(echo "$MF_pushed" | egrep "$Message_id")" ]; then
 			Message_app="$(echo "$config_conf" | egrep "^$MF_app=" | sed -n 's/.*=//g;$p')"
 			if [ -n "$Message_app" ]; then
 				MF_app="$Message_app"
 			fi
 			ticker_Text="$(echo "$Message_p" | egrep 'tickerText=' | sed -n 's/.*tickerText=//g;s/ contentView=.*//g;s/\"/\\\"/g;$p')"
 			android_title="$(echo "$Message_p" | egrep 'android\.title=' | sed -n 's/.*android\.title=//g;s/) android\..*//g;s/) isVideoCall=.*//g;s/.*String (//g;s/\"/\\\"/g;$p')"
-			if ! [[ "$ticker_Text" == "" ]] && ! [[ "$ticker_Text" == "null" ]] && ! [[ "$android_title" =~ "$ticker_Text" ]]; then
+			if [ -n "$ticker_Text" -a "$ticker_Text" != "null" -a ! -n "$(echo "$android_title" | egrep "$ticker_Text")" ]; then
 				if [ -n "$black_list" ]; then
 					ticker_Text="$(echo "$ticker_Text" | egrep -v "$black_list")"
 				fi
@@ -210,6 +209,6 @@ if type curl > /dev/null 2>&1; then
 else
 	echo "$(date +%F_%T) 系统缺少curl命令模块：无法转发消息，请安装curl模块后再使用" > "$MODDIR/log.log"
 fi
-#version=2022050500
+#version=2022062000
 # ##
 
