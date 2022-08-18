@@ -69,6 +69,10 @@ if type curl > /dev/null 2>&1; then
 				echo "$(date +%F_%T) 微信通道 消息转发成功：$wx_text" >> "$MODDIR/log.log"
 			elif [ "$wx_push_errcode" = "44004" ]; then
 				echo "$(date +%F_%T) 【微信通道 消息转发失败】：content错误" >> "$MODDIR/log.log"
+			elif [ "$wx_push_errcode" = "60020" ]; then
+				echo "$(date +%F_%T) 【微信通道 消息转发失败】：通道有IP限制的新规则，企业微信后台找到[应用管理]-[自建]-应用详情页-企业可信IP，把你设备的外网IP加上去，若设备不是固定IP，那只能用代理IP解决，暂时没有更好的办法，建议使用钉钉通道。返回提示：$wx_push。" >> "$MODDIR/log.log"
+			elif [ "$wx_push_errcode" = "45009" ]; then
+				echo "$(date +%F_%T) 【微信通道 消息转发失败】：接口调用超过限制，请变更外网IP后再尝试。" >> "$MODDIR/log.log"
 			elif [ "$wx_push_errcode" != "42001" -a "$wx_push_errcode" != "41001" -a "$wx_push_errcode" != "40014" ]; then
 				echo "$(date +%F_%T) 【微信通道 消息转发失败】：请检查配置参数[企业ID]、[应用Secret]、[应用AgentId]是否填写正确且相互匹配，返回提示：$wx_push" >> "$MODDIR/log.log"
 			fi
